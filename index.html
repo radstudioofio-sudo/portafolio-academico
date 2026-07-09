@@ -4,234 +4,709 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portafolio Digital | Base de Datos II</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* Variables de entorno para cambios de tema fluidos */
+        /* ============================================================
+           TOKENS — Sistema de diseño
+           ============================================================ */
         :root {
-            --bg-principal: #0f172a;
-            --bg-tarjeta: #1e293b;
-            --texto-principal: #f8fafc;
-            --texto-secundario: #94a3b8;
-            --acentuar: #38bdf8;
-            --acentuar-hover: #7dd3fc;
-            --borde: #334155;
-            --transicion: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-principal: #05070d;
+            --bg-superficie: #0b0f1a;
+            --bg-tarjeta: #10152322;
+            --bg-tarjeta-solida: #10152380;
+            --texto-principal: #eef1f8;
+            --texto-secundario: #8a93a8;
+            --texto-terciario: #5b6478;
+            --borde: #1e2536;
+            --borde-hover: #313c56;
+
+            --cian: #22d3ee;
+            --purpura: #a78bfa;
+            --esmeralda: #34d399;
+            --ambar: #fbbf24;
+            --rosa: #fb7185;
+
+            --gradiente-acento: linear-gradient(135deg, var(--cian), var(--purpura));
+            --sombra-glow: 0 0 0 rgba(34, 211, 238, 0);
+
+            --radio-sm: 8px;
+            --radio-md: 14px;
+            --radio-lg: 20px;
+
+            --easing: cubic-bezier(0.16, 1, 0.3, 1);
+            --transicion: all 0.35s var(--easing);
+
+            --fuente-display: 'Space Grotesk', sans-serif;
+            --fuente-cuerpo: 'Inter', sans-serif;
+            --fuente-mono: 'JetBrains Mono', monospace;
         }
 
         [data-theme="light"] {
-            --bg-principal: #f8fafc;
-            --bg-tarjeta: #ffffff;
-            --texto-principal: #0f172a;
-            --texto-secundario: #475569;
-            --acentuar: #0284c7;
-            --acentuar-hover: #0369a1;
-            --borde: #e2e8f0;
+            --bg-principal: #f6f7fb;
+            --bg-superficie: #ffffff;
+            --bg-tarjeta: #ffffffcc;
+            --bg-tarjeta-solida: #ffffff;
+            --texto-principal: #12141f;
+            --texto-secundario: #565f75;
+            --texto-terciario: #8890a3;
+            --borde: #e3e6ef;
+            --borde-hover: #c7cce0;
+
+            --cian: #0891b2;
+            --purpura: #7c3aed;
+            --esmeralda: #059669;
+            --ambar: #b45309;
+            --rosa: #e11d48;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
 
         body {
+            font-family: var(--fuente-cuerpo);
             background-color: var(--bg-principal);
             color: var(--texto-principal);
-            transition: var(--transicion);
+            transition: background-color 0.5s var(--easing), color 0.5s var(--easing);
             min-height: 100vh;
-            padding: 3rem 1rem;
+            padding: 0 1.25rem 5rem;
+            position: relative;
+            overflow-x: hidden;
         }
 
+        :focus-visible {
+            outline: 2px solid var(--cian);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+
+        /* ============================================================
+           FONDO — Malla de nodos relacional (referencia a ER-diagrams)
+           ============================================================ */
+        .malla-fondo {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .malla-fondo { opacity: 0.25; }
+
+        .malla-fondo::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(34, 211, 238, 0.10) 0%, transparent 40%),
+                radial-gradient(circle at 85% 75%, rgba(167, 139, 250, 0.10) 0%, transparent 40%),
+                radial-gradient(circle at 50% 100%, rgba(52, 211, 153, 0.06) 0%, transparent 50%);
+        }
+
+        .malla-fondo svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .nodo-linea {
+            stroke: var(--borde);
+            stroke-width: 1;
+            opacity: 0.5;
+        }
+
+        .nodo-punto {
+            fill: var(--cian);
+            animation: pulsarNodo 4s ease-in-out infinite;
+        }
+
+        @keyframes pulsarNodo {
+            0%, 100% { opacity: 0.25; r: 2; }
+            50% { opacity: 0.9; r: 3; }
+        }
+
+        /* ============================================================
+           CONTENEDOR & HEADER
+           ============================================================ */
         .contenedor {
-            max-width: 1050px;
+            max-width: 1100px;
             margin: 0 auto;
+            position: relative;
         }
 
         header {
-            text-align: center;
-            margin-bottom: 3.5rem;
-            position: relative;
-            animation: fadeInDown 0.8s ease;
+            padding-top: 3.5rem;
+            margin-bottom: 2.5rem;
+            animation: fadeInDown 0.9s var(--easing);
+        }
+
+        .eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: var(--fuente-mono);
+            font-size: 0.75rem;
+            color: var(--texto-terciario);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .punto-vivo {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--esmeralda);
+            box-shadow: 0 0 8px var(--esmeralda);
+            animation: latir 2s ease-in-out infinite;
+        }
+
+        @keyframes latir {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.6; }
         }
 
         h1 {
-            font-size: 2.8rem;
-            margin-bottom: 0.5rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
+            font-family: var(--fuente-display);
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.05;
+            margin-bottom: 0.7rem;
         }
 
-        h1 span {
-            color: var(--acentuar);
+        h1 .acento {
+            background: var(--gradiente-acento);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .subtitulo {
             color: var(--texto-secundario);
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 500;
-            letter-spacing: 0.02em;
+            max-width: 46ch;
         }
 
-        /* Controles de Temas y Filtros */
-        .controles {
+        /* ---- Panel de progreso ---- */
+        .panel-progreso {
+            margin-top: 2rem;
+            background: var(--bg-tarjeta-solida);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio-lg);
+            padding: 1.5rem 1.7rem;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2.5rem;
             flex-wrap: wrap;
-            gap: 1rem;
-            animation: fadeIn 1s ease;
-        }
-
-        .filtros {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-filtro {
-            background: var(--bg-tarjeta);
-            color: var(--texto-principal);
-            border: 1px solid var(--borde);
-            padding: 0.5rem 1.4rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: var(--transicion);
-        }
-
-        .btn-filtro.activo, .btn-filtro:hover {
-            background: var(--acentuar);
-            color: #0f172a;
-            border-color: var(--acentuar);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
-        }
-
-        .btn-tema {
-            background: none;
-            border: 1px solid var(--borde);
-            color: var(--texto-principal);
-            padding: 0.5rem 1.2rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: var(--transicion);
-        }
-
-        .btn-tema:hover {
-            border-color: var(--acentuar);
-        }
-
-        /* Grid de Asignaciones */
-        .grid-asignaciones {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.8rem;
-        }
-
-        .tarjeta {
-            background: var(--bg-tarjeta);
-            border: 1px solid var(--borde);
-            border-radius: 14px;
-            padding: 1.8rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: var(--transicion);
-            animation: scaleUp 0.5s ease;
+            align-items: center;
+            gap: 1.5rem 2.5rem;
+            backdrop-filter: blur(12px);
             position: relative;
             overflow: hidden;
         }
 
-        /* Línea de acento lateral animada */
+        .panel-progreso::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -20%;
+            width: 60%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.04), transparent);
+            animation: barridoLuz 6s linear infinite;
+        }
+
+        @keyframes barridoLuz {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
+        }
+
+        .stat-bloque {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            z-index: 1;
+        }
+
+        .stat-numero {
+            font-family: var(--fuente-display);
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .stat-numero.n-cian { color: var(--cian); }
+        .stat-numero.n-esmeralda { color: var(--esmeralda); }
+        .stat-numero.n-ambar { color: var(--ambar); }
+
+        .stat-etiqueta {
+            font-size: 0.72rem;
+            color: var(--texto-terciario);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        .barra-progreso-wrap {
+            flex: 1;
+            min-width: 200px;
+            z-index: 1;
+        }
+
+        .barra-progreso-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--texto-secundario);
+            margin-bottom: 0.5rem;
+            font-family: var(--fuente-mono);
+        }
+
+        .barra-progreso-track {
+            height: 8px;
+            width: 100%;
+            background: var(--borde);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .barra-progreso-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: var(--gradiente-acento);
+            width: 0%;
+            transition: width 1.1s var(--easing);
+            position: relative;
+        }
+
+        .barra-progreso-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            animation: brilloBarra 2.2s ease-in-out infinite;
+        }
+
+        @keyframes brilloBarra {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* ============================================================
+           CONTROLES — búsqueda, filtros, tema
+           ============================================================ */
+        .controles {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            margin: 2.2rem 0 2.4rem;
+            animation: fadeIn 1s var(--easing) 0.1s backwards;
+        }
+
+        .fila-controles-superior {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .buscador-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .buscador-icono {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--texto-terciario);
+            pointer-events: none;
+            transition: var(--transicion);
+        }
+
+        #buscador {
+            width: 100%;
+            background: var(--bg-superficie);
+            border: 1px solid var(--borde);
+            color: var(--texto-principal);
+            padding: 0.75rem 1rem 0.75rem 2.6rem;
+            border-radius: var(--radio-md);
+            font-size: 0.92rem;
+            font-family: var(--fuente-cuerpo);
+            transition: var(--transicion);
+        }
+
+        #buscador::placeholder { color: var(--texto-terciario); }
+
+        #buscador:hover {
+            border-color: var(--borde-hover);
+        }
+
+        #buscador:focus {
+            outline: none;
+            border-color: var(--cian);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.12);
+        }
+
+        .buscador-wrap:focus-within .buscador-icono {
+            color: var(--cian);
+        }
+
+        .btn-limpiar {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--borde);
+            border: none;
+            color: var(--texto-secundario);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transicion);
+        }
+
+        .btn-limpiar.visible { display: flex; }
+        .btn-limpiar:hover { background: var(--rosa); color: #fff; }
+
+        .btn-tema {
+            background: var(--bg-superficie);
+            border: 1px solid var(--borde);
+            color: var(--texto-principal);
+            padding: 0.75rem 1.1rem;
+            border-radius: var(--radio-md);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transicion);
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-tema:hover {
+            border-color: var(--cian);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(34, 211, 238, 0.15);
+        }
+
+        .btn-tema:active { transform: translateY(0) scale(0.96); }
+
+        .icono-tema { font-size: 1rem; transition: transform 0.5s var(--easing); }
+        .btn-tema:hover .icono-tema { transform: rotate(180deg); }
+
+        .filtros {
+            display: flex;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-filtro {
+            background: var(--bg-superficie);
+            color: var(--texto-secundario);
+            border: 1px solid var(--borde);
+            padding: 0.55rem 1.15rem;
+            border-radius: 99px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.82rem;
+            transition: var(--transicion);
+            position: relative;
+        }
+
+        .btn-filtro:hover {
+            color: var(--texto-principal);
+            border-color: var(--borde-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-filtro.activo {
+            background: var(--gradiente-acento);
+            color: #05070d;
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(34, 211, 238, 0.25);
+        }
+
+        [data-theme="light"] .btn-filtro.activo { color: #ffffff; }
+
+        .btn-filtro:active { transform: translateY(0) scale(0.96); }
+
+        .contador-resultados {
+            font-family: var(--fuente-mono);
+            font-size: 0.78rem;
+            color: var(--texto-terciario);
+            padding-left: 0.2rem;
+        }
+
+        .contador-resultados strong { color: var(--cian); font-weight: 600; }
+
+        /* ============================================================
+           GRID DE TARJETAS
+           ============================================================ */
+        .grid-asignaciones {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.6rem;
+            perspective: 1000px;
+        }
+
+        .tarjeta {
+            background: var(--bg-tarjeta-solida);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio-lg);
+            padding: 1.7rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.45s var(--easing), border-color 0.45s var(--easing), box-shadow 0.45s var(--easing);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            animation: entradaTarjeta 0.55s var(--easing) backwards;
+        }
+
         .tarjeta::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--acentuar);
-            transform: scaleY(0);
-            transition: var(--transicion);
-            transform-origin: bottom;
+            inset: 0;
+            border-radius: var(--radio-lg);
+            padding: 1px;
+            background: var(--gradiente-acento);
+            opacity: 0;
+            transition: opacity 0.45s var(--easing);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .tarjeta::after {
+            content: '';
+            position: absolute;
+            top: -40%;
+            left: -10%;
+            width: 45%;
+            height: 180%;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.10), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s var(--easing);
+            pointer-events: none;
         }
 
         .tarjeta:hover {
-            transform: translateY(-6px) scale(1.01);
-            border-color: var(--acentuar);
-            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+            transform: translateY(-8px) rotateX(2deg);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(34, 211, 238, 0.08);
         }
 
-        .tarjeta:hover::before {
-            transform: scaleY(1);
+        .tarjeta:hover::before { opacity: 1; }
+        .tarjeta:hover::after { opacity: 1; }
+
+        .tarjeta-encabezado {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-bottom: 0.9rem;
         }
 
         .tag-materia {
-            font-size: 0.75rem;
+            font-size: 0.68rem;
             text-transform: uppercase;
             font-weight: 700;
-            color: var(--acentuar);
+            color: var(--cian);
             letter-spacing: 0.08em;
-            margin-bottom: 0.6rem;
+            background: rgba(34, 211, 238, 0.1);
+            padding: 0.28rem 0.65rem;
+            border-radius: var(--radio-sm);
+            width: fit-content;
+        }
+
+        .tag-estado {
+            font-size: 0.66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.28rem 0.6rem;
+            border-radius: var(--radio-sm);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .tag-estado::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .tag-estado.entregado {
+            color: var(--esmeralda);
+            background: rgba(52, 211, 153, 0.1);
+        }
+
+        .tag-estado.ajustes {
+            color: var(--rosa);
+            background: rgba(251, 113, 133, 0.1);
+        }
+
+        .tag-estado.desarrollo {
+            color: var(--ambar);
+            background: rgba(251, 191, 36, 0.1);
         }
 
         .titulo-tarea {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 0.8rem;
-            line-height: 1.3;
+            font-family: var(--fuente-display);
+            font-size: 1.18rem;
+            font-weight: 600;
+            margin-bottom: 0.7rem;
+            line-height: 1.35;
         }
 
         .descripcion-tarea {
             color: var(--texto-secundario);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            margin-bottom: 1.1rem;
             flex-grow: 1;
         }
 
-        /* Bloque de retroalimentación elegante */
         .feedback-box {
-            margin-top: 0.5rem;
             margin-bottom: 1.2rem;
-            font-size: 0.85rem;
-            color: #f43f5e;
-            border-left: 2px solid #f43f5e;
-            padding-left: 10px;
-            font-style: italic;
-            line-height: 1.4;
+            font-size: 0.83rem;
+            color: var(--rosa);
+            background: rgba(251, 113, 133, 0.06);
+            border-left: 2px solid var(--rosa);
+            padding: 0.6rem 0.75rem;
+            border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+            line-height: 1.45;
         }
 
-        [data-theme="light"] .feedback-box {
-            color: #dc2626;
-            border-left-color: #dc2626;
+        .feedback-box strong {
+            display: block;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.2rem;
+            font-style: normal;
         }
 
         .enlace-descarga {
             display: inline-flex;
             align-items: center;
-            color: var(--acentuar);
+            color: var(--texto-principal);
             text-decoration: none;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             transition: var(--transicion);
             width: fit-content;
             margin-top: auto;
+            padding: 0.55rem 0;
+            border-bottom: 1px solid var(--borde);
         }
 
         .enlace-descarga:hover {
-            color: var(--acentuar-hover);
-            transform: translateX(5px);
+            color: var(--cian);
+            border-bottom-color: var(--cian);
         }
 
         .enlace-descarga span {
             margin-left: 0.5rem;
-            transition: var(--transicion);
+            transition: transform 0.35s var(--easing);
         }
 
-        /* Animaciones del Sistema */
+        .enlace-descarga:hover span {
+            transform: translateX(4px);
+        }
+
+        /* ---- Skeleton loader ---- */
+        .skeleton {
+            background: var(--bg-tarjeta-solida);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio-lg);
+            padding: 1.7rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .skeleton-linea {
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--borde) 25%, var(--borde-hover) 50%, var(--borde) 75%);
+            background-size: 200% 100%;
+            animation: brilloSkeleton 1.4s ease-in-out infinite;
+        }
+
+        @keyframes brilloSkeleton {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton .skeleton-linea:nth-child(1) { width: 30%; height: 18px; border-radius: var(--radio-sm); }
+        .skeleton .skeleton-linea:nth-child(2) { width: 85%; height: 22px; margin-top: 0.4rem; }
+        .skeleton .skeleton-linea:nth-child(3) { width: 100%; height: 14px; }
+        .skeleton .skeleton-linea:nth-child(4) { width: 90%; height: 14px; }
+        .skeleton .skeleton-linea:nth-child(5) { width: 40%; height: 14px; margin-top: 0.6rem; }
+
+        /* ---- Estado vacío ---- */
+        .estado-vacio {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--texto-terciario);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .estado-vacio-icono {
+            font-family: var(--fuente-mono);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--texto-terciario);
+        }
+
+        .estado-vacio h3 {
+            font-family: var(--fuente-display);
+            color: var(--texto-secundario);
+            margin-bottom: 0.4rem;
+            font-size: 1.1rem;
+        }
+
+        .estado-vacio p { font-size: 0.88rem; }
+
+        /* ============================================================
+           ANIMACIONES DE ENTRADA
+           ============================================================ */
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-25px); }
             to { opacity: 1; transform: translateY(0); }
@@ -240,160 +715,456 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        @keyframes scaleUp {
-            from { opacity: 0; transform: scale(0.96); }
-            to { opacity: 1; transform: scale(1); }
+        @keyframes entradaTarjeta {
+            from { opacity: 0; transform: translateY(18px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            color: var(--texto-terciario);
+            font-size: 0.78rem;
+            font-family: var(--fuente-mono);
         }
 
         @media (max-width: 640px) {
-            .controles {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .filtros {
-                overflow-x: auto;
-                padding-bottom: 0.5rem;
-            }
+            body { padding: 0 1rem 3.5rem; }
+            .fila-controles-superior { flex-direction: column; align-items: stretch; }
+            .btn-tema { justify-content: center; }
+            .filtros { overflow-x: auto; padding-bottom: 0.4rem; }
+            .panel-progreso { padding: 1.2rem; }
         }
     </style>
 </head>
 <body>
 
+    <div class="malla-fondo" aria-hidden="true">
+        <svg preserveAspectRatio="none">
+            <line class="nodo-linea" x1="8%" y1="12%" x2="30%" y2="28%" />
+            <line class="nodo-linea" x1="30%" y1="28%" x2="20%" y2="55%" />
+            <line class="nodo-linea" x1="80%" y1="15%" x2="65%" y2="40%" />
+            <line class="nodo-linea" x1="65%" y1="40%" x2="88%" y2="60%" />
+            <line class="nodo-linea" x1="15%" y1="80%" x2="40%" y2="70%" />
+            <line class="nodo-linea" x1="75%" y1="85%" x2="55%" y2="72%" />
+            <circle class="nodo-punto" cx="8%" cy="12%" r="2.5" style="animation-delay:0s" />
+            <circle class="nodo-punto" cx="30%" cy="28%" r="2.5" style="animation-delay:0.6s" />
+            <circle class="nodo-punto" cx="20%" cy="55%" r="2.5" style="animation-delay:1.2s" />
+            <circle class="nodo-punto" cx="80%" cy="15%" r="2.5" style="animation-delay:1.8s" />
+            <circle class="nodo-punto" cx="65%" cy="40%" r="2.5" style="animation-delay:2.4s" />
+            <circle class="nodo-punto" cx="88%" cy="60%" r="2.5" style="animation-delay:0.3s" />
+            <circle class="nodo-punto" cx="15%" cy="80%" r="2.5" style="animation-delay:0.9s" />
+            <circle class="nodo-punto" cx="40%" cy="70%" r="2.5" style="animation-delay:1.5s" />
+            <circle class="nodo-punto" cx="75%" cy="85%" r="2.5" style="animation-delay:2.1s" />
+            <circle class="nodo-punto" cx="55%" cy="72%" r="2.5" style="animation-delay:2.7s" />
+        </svg>
+    </div>
+
     <div class="contenedor">
         <header>
-            <h1>Portafolio <span>Académico</span></h1>
-            <p class="subtitulo">Facultad de Ingeniería de Sistemas Computacionales | Evidencias de Desempeño</p>
+            <div class="eyebrow"><span class="punto-vivo"></span> Registro académico en línea</div>
+            <h1>Portafolio <span class="acento">Digital - Base de Datos II</span></h1>
+            <p class="subtitulo">Facultad de Ingeniería de Sistemas Computacionales — Base de Datos II</p>
+
+            <div class="panel-progreso">
+                <div class="stat-bloque">
+                    <span class="stat-numero n-cian" id="stat-total">0</span>
+                    <span class="stat-etiqueta">Asignaciones</span>
+                </div>
+                <div class="stat-bloque">
+                    <span class="stat-numero n-esmeralda" id="stat-entregado">0</span>
+                    <span class="stat-etiqueta">Entregadas</span>
+                </div>
+                <div class="stat-bloque">
+                    <span class="stat-numero n-ambar" id="stat-ajustes">0</span>
+                    <span class="stat-etiqueta">Con feedback</span>
+                </div>
+                <div class="barra-progreso-wrap">
+                    <div class="barra-progreso-info">
+                        <span>Progreso general</span>
+                        <span id="barra-progreso-porcentaje">0%</span>
+                    </div>
+                    <div class="barra-progreso-track">
+                        <div class="barra-progreso-fill" id="barra-progreso-fill"></div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <div class="controles">
-            <div class="filtros" id="contenedor-filtros">
-                <button class="btn-filtro activo" onclick="filtrarMaterias('todos', this)">Todas las Entregas</button>
-                <button class="btn-filtro" onclick="filtrarMaterias('Base de Datos II', this)">Base de Datos II</button>
+            <div class="fila-controles-superior">
+                <div class="buscador-wrap">
+                    <span class="buscador-icono">🔍</span>
+                    <input type="text" id="buscador" placeholder="Buscar por título o descripción..." autocomplete="off" />
+                    <button class="btn-limpiar" id="btn-limpiar-buscador" aria-label="Limpiar búsqueda">✕</button>
+                </div>
+                <button class="btn-tema" id="toggle-tema" onclick="cambiarTema()">
+                    <span class="icono-tema">🌓</span> Cambiar tema
+                </button>
             </div>
-            <button class="btn-tema" id="toggle-tema" onclick="cambiarTema()">🌓 Cambiar Tema</button>
+
+            <div class="filtros" id="contenedor-filtros">
+                <button class="btn-filtro activo" onclick="filtrarCategoria('todos', this)">Todo</button>
+                <button class="btn-filtro" onclick="filtrarCategoria('Practica', this)">Prácticas</button>
+                <button class="btn-filtro" onclick="filtrarCategoria('Talleres', this)">Talleres</button>
+                <button class="btn-filtro" onclick="filtrarCategoria('Tareas', this)">Tareas</button>
+                <button class="btn-filtro" onclick="filtrarCategoria('Proyectos', this)">Proyectos</button>
+                <button class="btn-filtro" onclick="filtrarCategoria('Quiz', this)">Quices</button>
+                <button class="btn-filtro" onclick="filtrarCategoria('Parcial', this)">Exámenes</button>
+            </div>
+
+            <div class="contador-resultados" id="contador-resultados"></div>
         </div>
 
         <main class="grid-asignaciones" id="grid-proyectos">
-            </main>
+            <!-- Las tarjetas se inyectan dinámicamente mediante JS -->
+        </main>
+
+        <footer>Base de Datos II · Portafolio de evidencias académicas</footer>
     </div>
 
     <script>
-        // Repositorio local estructurado de tus entregas en Base de Datos II.
-        // Reemplaza los valores de "link_archivo" por los enlaces reales de tus documentos compartidos.
+        // REEMPLAZA LOS TEXTOS "REEMPLAZAR_CON_LINK_..." CON LOS ENLACES REALES DE TUS CARPETAS
+        const linksDrive = {
+            "Practica": "https://drive.google.com/drive/folders/19G0lMqAf-ZJn0u2pw3_k3Dc1UKqp5djV?usp=sharing",
+            "Talleres": "https://drive.google.com/drive/folders/1rZNxjPlwmUqd0R5XQ0ArZhahrbGYNicV?usp=sharing",
+            "Tareas": "https://drive.google.com/drive/folders/1NUKZL7rTRLWyQfhpgL8sKbJUPccJTyYw?usp=sharing",
+            "Proyectos": "https://drive.google.com/drive/folders/1qfqv-XLGef0zq2Wqt1Md0QbhREJ1OdsW?usp=sharing",
+            "Quiz": "https://drive.google.com/drive/folders/1IdIt7TbE2xe0QzGQsgFK4Eow4xiOsSG4?usp=sharing",
+            "Parcial": "https://drive.google.com/drive/folders/1E_Cw9Nr4zF6C6pkem4IWNxU2Qpg8MnuM?usp=sharing"
+        };
+
         const asignaciones = [
             {
                 "id": 1,
-                "materia": "Base de Datos II",
-                "asignacion": "Práctica N° 1 & N° 2: Normalización del Modelo Relacional",
-                "descripcion": "Diseño lógico, optimización y normalización de esquemas relacionales a través de dependencias funcionales. Aplicación rigurosa de formas normales (1FN, 2FN, 3FN) con el objetivo de mitigar redundancias y prevenir anomalías transaccionales.",
-                "retroalimentacion": "Falta la tabla que relaciona Id_venta y Id_producto.",
-                "link_archivo": "https://drive.google.com/"
+                "categoria": "Practica",
+                "asignacion": "Práctica N° 1",
+                "descripcion": "Modelado e introducción práctica a estructuras relacionales y manipulación inicial de esquemas de datos.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Practica
             },
             {
                 "id": 2,
-                "materia": "Base de Datos II",
-                "asignacion": "Práctica #4 & #5: Creación de Dashboards Analíticos y de Auditoría",
-                "descripcion": "Construcción y despliegue de tableros visuales para el monitoreo interactivo de métricas transaccionales y de negocio. Integración de vistas detalladas y estructuración de trazas de auditoría para el control de accesos, mutaciones e integridad del sistema.",
-                "retroalimentacion": "",
-                "link_archivo": "https://drive.google.com/"
+                "categoria": "Practica",
+                "asignacion": "Práctica N° 2: Normalización del Modelo Relacional",
+                "descripcion": "Diseño lógico y descomposición de esquemas mediante dependencias funcionales para mitigar redundancias y anomalías operacionales.",
+                "retroalimentacion": "Falta la tabla que relaciona Id_venta y Id_producto.",
+                "link_archivo": linksDrive.Practica
             },
             {
                 "id": 3,
-                "materia": "Base de Datos II",
-                "asignacion": "Integración Programática y Aplicativo Python: BD empresa_segura",
-                "descripcion": "Desarrollo e implementación de una capa de software utilizando Python para la interacción directa con la base de datos empresarial de forma controlada. Gestión nativa de operaciones CRUD, consultas parametrizadas seguras y manejo estructurado de transacciones.",
+                "categoria": "Practica",
+                "asignacion": "Práctica N° 3",
+                "descripcion": "Consolidación de consultas complejas y optimización de estructuras relacionales avanzadas.",
                 "retroalimentacion": "",
-                "link_archivo": "https://drive.google.com/"
+                "link_archivo": linksDrive.Practica
             },
             {
                 "id": 4,
-                "materia": "Base de Datos II",
-                "asignacion": "Proyecto de Sistema de Información con MySQL y Programación",
-                "descripcion": "Ingeniería y despliegue integral de un sistema de información estructurado. Contempla el modelado físico relacional óptimo sobre el motor MySQL junto con su respectiva capa de lógica de negocio orientada a objetos.",
+                "categoria": "Practica",
+                "asignacion": "Práctica #4 - Creación de Dashboard",
+                "descripcion": "Estructuración de vistas dinámicas y desarrollo frontend inicial para el monitoreo de indicadores transaccionales.",
                 "retroalimentacion": "",
-                "link_archivo": "https://drive.google.com/"
+                "link_archivo": linksDrive.Practica
             },
             {
                 "id": 5,
-                "materia": "Base de Datos II",
-                "asignacion": "Configuración de Clúster y Dashboards KPI con MongoDB Atlas & HTML",
-                "descripcion": "Despliegue y aprovisionamiento en la nube de infraestructuras NoSQL orientadas a documentos empleando MongoDB Atlas. Diseño e interfaz frontend orientada a la monitorización y visualización estática de Indicadores Clave de Rendimiento (KPI).",
-                "retroalimentacion": "No se ve interacción con los gráficos, no se ven los KPI, y su integración con los datos de mongo DB.",
-                "link_archivo": "https://drive.google.com/"
+                "categoria": "Practica",
+                "asignacion": "Práctica #5 - Crear Dashboard de Auditoría",
+                "descripcion": "Implementación de paneles de visualización para el rastreo de eventos, seguridad e historiales de cambios dentro de la base de datos.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Practica
             },
             {
                 "id": 6,
-                "materia": "Base de Datos II",
-                "asignacion": "Talleres Avanzados NoSQL: Conectividad y Consultas en MongoDB",
-                "descripcion": "Construcción de lógicas de acceso y manipulación avanzada en bases de datos no relacionales. Incluye el uso intensivo del framework de agregación para consultas complejas y la documentación estructurada de scripts de bases de datos.",
-                "retroalimentacion": "Coloque las descripciones a la captura de pantalla, o sea qué está observando y qué evento se está ejecutando en el script.",
-                "link_archivo": "https://drive.google.com/"
+                "categoria": "Practica",
+                "asignacion": "Práctica #8 - Creación de Dashboard de Integración",
+                "descripcion": "Unificación de múltiples fuentes de datos relacionales en una sola interfaz interactiva para análisis integral.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Practica
             },
             {
                 "id": 7,
-                "materia": "Base de Datos II",
-                "asignacion": "Proyecto: SmartHome DB - IoT (En Desarrollo)",
-                "descripcion": "Modelado, almacenamiento dinámico e integración de arquitecturas de datos optimizadas para capturar y procesar de forma eficiente ráfagas continuas de telemetría provenientes de dispositivos inteligentes y entornos embebidos IoT.",
+                "categoria": "Tareas",
+                "asignacion": "Presentación de Proyecto #1 - Integración de BD con Programación",
+                "descripcion": "Definición y sustentación de la arquitectura de comunicación entre capas de software y motores relacionales.",
                 "retroalimentacion": "",
-                "link_archivo": "https://drive.google.com/"
+                "link_archivo": linksDrive.Tareas
+            },
+            {
+                "id": 8,
+                "categoria": "Tareas",
+                "asignacion": "Crear Aplicativo en Python integrando a BD empresa_segura",
+                "descripcion": "Desarrollo de scripts funcionales mediante conectores nativos, implementando transacciones ACID y persistencia segura de datos corporativos.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Tareas
+            },
+            {
+                "id": 9,
+                "categoria": "Proyectos",
+                "asignacion": "Proyecto de Sistema de Información con MySQL y Programación",
+                "descripcion": "Ingeniería completa de software conectando un backend robusto hacia un motor de base de datos relacional MySQL parametrizado.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Proyectos
+            },
+            {
+                "id": 10,
+                "categoria": "Tareas",
+                "asignacion": "Configuración de BD Mongo Atlas",
+                "descripcion": "Aprovisionamiento, clusters distribuidos y configuración de políticas de acceso para un entorno NoSQL basado en la nube.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Tareas
+            },
+            {
+                "id": 11,
+                "categoria": "Tareas",
+                "asignacion": "Crear Dashboard de KPI con MongoDB y HTML",
+                "descripcion": "Desarrollo de un entorno frontend para el consumo de agregaciones documentales orientadas a métricas de rendimiento claves.",
+                "retroalimentacion": "no se ve interacción con los gráficos, no se ven los KPI, y su integración con los datos de mongo DB",
+                "link_archivo": linksDrive.Tareas
+            },
+            {
+                "id": 12,
+                "categoria": "Talleres",
+                "asignacion": "Taller #9 - Crear App Conectado a MongoDB",
+                "descripcion": "Construcción de una aplicación funcional integrando controladores y operaciones CRUD orientadas a colecciones BSON.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Talleres
+            },
+            {
+                "id": 13,
+                "categoria": "Talleres",
+                "asignacion": "Taller N° 10 - MongoDB Avanzado",
+                "descripcion": "Uso avanzado de tuberías de agregación (aggregation pipelines), indexación geoespacial y optimización de consultas documentales.",
+                "retroalimentacion": "coloque las descripciones a la captura de pantalla, osea que esta observando y que evento se está ejecutando en el script.",
+                "link_archivo": linksDrive.Talleres
+            },
+            {
+                "id": 14,
+                "categoria": "Quiz",
+                "asignacion": "Quiz N° 1 & Quiz N° 2 - Funciones de un DBA",
+                "descripcion": "Evaluación teórica técnica sobre la administración, respaldos, tuning de bases de datos y responsabilidades críticas del Administrador de BD.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Quiz
+            },
+            {
+                "id": 15,
+                "categoria": "Parcial",
+                "asignacion": "Examen Parcial N° 1",
+                "descripcion": "Prueba de rendimiento académico sobre álgebra relacional, optimización de queries y normalización de bases de datos.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Parcial
+            },
+            {
+                "id": 16,
+                "categoria": "Proyectos",
+                "asignacion": "Proyecto de SmartHome DB - IoT",
+                "descripcion": "Arquitectura y diseño de bases de datos destinadas a almacenar telemetría de alta velocidad en tiempo real de dispositivos inteligentes.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Proyectos
+            },
+            {
+                "id": 17,
+                "categoria": "Tareas",
+                "asignacion": "Taller #11 - Seguridad en BD",
+                "descripcion": "Análisis e implementación de accesos basados en roles (RBAC), encriptación en tránsito/reposo y mitigación de inyecciones de código.",
+                "retroalimentacion": "",
+                "link_archivo": linksDrive.Tareas
             }
         ];
 
-        // Función encargada de renderizar las tarjetas interactivas
+        // ============================================================
+        // Estado
+        // ============================================================
+        let categoriaActual = 'todos';
+        let terminoBusqueda = '';
+
+        // ============================================================
+        // Determina el estado visual de una tarea sin alterar sus datos
+        // ============================================================
+        function obtenerEstado(tarea) {
+            if (tarea.id === 16) {
+                return { clase: 'desarrollo', etiqueta: 'En Desarrollo' };
+            }
+            if (tarea.retroalimentacion && tarea.retroalimentacion.trim() !== '') {
+                return { clase: 'ajustes', etiqueta: 'Requiere Ajustes' };
+            }
+            return { clase: 'entregado', etiqueta: 'Entregado' };
+        }
+
+        function escaparHTML(texto) {
+            const div = document.createElement('div');
+            div.textContent = texto;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        // Renderizado de estadísticas y barra de progreso
+        // ============================================================
+        function renderizarEstadisticas() {
+            const total = asignaciones.length;
+            const entregadas = asignaciones.filter(t => obtenerEstado(t).clase === 'entregado').length;
+            const ajustes = asignaciones.filter(t => obtenerEstado(t).clase === 'ajustes').length;
+            const porcentaje = Math.round((entregadas / total) * 100);
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-entregado').textContent = entregadas;
+            document.getElementById('stat-ajustes').textContent = ajustes;
+            document.getElementById('barra-progreso-porcentaje').textContent = porcentaje + '%';
+
+            requestAnimationFrame(() => {
+                document.getElementById('barra-progreso-fill').style.width = porcentaje + '%';
+            });
+        }
+
+        // ============================================================
+        // Filtrado combinado (categoría + búsqueda)
+        // ============================================================
+        function obtenerDatosFiltrados() {
+            let datos = categoriaActual === 'todos'
+                ? asignaciones
+                : asignaciones.filter(t => t.categoria === categoriaActual);
+
+            if (terminoBusqueda.trim() !== '') {
+                const q = terminoBusqueda.toLowerCase();
+                datos = datos.filter(t =>
+                    t.asignacion.toLowerCase().includes(q) ||
+                    t.descripcion.toLowerCase().includes(q)
+                );
+            }
+            return datos;
+        }
+
+        function mostrarSkeletons(cantidad) {
+            const grid = document.getElementById('grid-proyectos');
+            grid.innerHTML = '';
+            const n = Math.min(cantidad || 6, 6);
+            for (let i = 0; i < n; i++) {
+                const sk = document.createElement('div');
+                sk.className = 'skeleton';
+                sk.innerHTML = `
+                    <div class="skeleton-linea"></div>
+                    <div class="skeleton-linea"></div>
+                    <div class="skeleton-linea"></div>
+                    <div class="skeleton-linea"></div>
+                    <div class="skeleton-linea"></div>
+                `;
+                grid.appendChild(sk);
+            }
+        }
+
         function renderizarTarjetas(datos) {
             const grid = document.getElementById('grid-proyectos');
             grid.innerHTML = '';
-            
-            datos.forEach(tarea => {
+
+            actualizarContador(datos.length);
+
+            if (datos.length === 0) {
+                grid.innerHTML = `
+                    <div class="estado-vacio">
+                        <div class="estado-vacio-icono">∅</div>
+                        <h3>Sin resultados</h3>
+                        <p>Ninguna asignación coincide con tu búsqueda o filtro actual.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            datos.forEach((tarea, index) => {
+                const estado = obtenerEstado(tarea);
                 const tarjeta = document.createElement('div');
                 tarjeta.className = 'tarjeta';
-                
-                // Generar HTML de retroalimentación únicamente si existe contenido
-                const retroHTML = tarea.retroalimentacion 
-                    ? `<div class="feedback-box"><strong>Feedback del Docente:</strong> ${tarea.retroalimentacion}</div>` 
+                tarjeta.style.animationDelay = (index * 0.05) + 's';
+
+                const retroHTML = tarea.retroalimentacion
+                    ? `<div class="feedback-box"><strong>Feedback del docente</strong>${escaparHTML(tarea.retroalimentacion)}</div>`
                     : '';
 
                 tarjeta.innerHTML = `
                     <div>
-                        <div class="tag-materia">${tarea.materia}</div>
-                        <h2 class="titulo-tarea">${tarea.asignacion}</h2>
-                        <p class="descripcion-tarea">${tarea.descripcion}</p>
+                        <div class="tarjeta-encabezado">
+                            <div class="tag-materia">${escaparHTML(tarea.categoria)}</div>
+                            <div class="tag-estado ${estado.clase}">${estado.etiqueta}</div>
+                        </div>
+                        <h2 class="titulo-tarea">${escaparHTML(tarea.asignacion)}</h2>
+                        <p class="descripcion-tarea">${escaparHTML(tarea.descripcion)}</p>
                         ${retroHTML}
                     </div>
-                    <a href="${tarea.link_archivo}" target="_blank" class="enlace-descarga">
-                        Ver Documentación y Código <span>&rarr;</span>
+                    <a href="${tarea.link_archivo}" target="_blank" rel="noopener" class="enlace-descarga">
+                        Abrir carpeta de evidencias <span>&rarr;</span>
                     </a>
                 `;
                 grid.appendChild(tarjeta);
             });
         }
 
-        // Filtro dinámico en tiempo real
-        function filtrarMaterias(materia, boton) {
-            document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('activo'));
-            boton.classList.add('activo');
-
-            if(materia === 'todos') {
-                renderizarTarjetas(asignaciones);
-            } else {
-                const filtrados = asignaciones.filter(t => t.materia === materia);
-                renderizarTarjetas(filtrados);
-            }
+        function actualizarContador(cantidad) {
+            const el = document.getElementById('contador-resultados');
+            el.innerHTML = `Mostrando <strong>${cantidad}</strong> de <strong>${asignaciones.length}</strong> asignaciones`;
         }
 
-        // Manejador del Tema (Modo Claro vs Modo Oscuro)
+        // Renderizado reactivo con skeleton breve para sensación de fluidez
+        function actualizarVista() {
+            const datosFiltrados = obtenerDatosFiltrados();
+            mostrarSkeletons(datosFiltrados.length);
+            setTimeout(() => {
+                renderizarTarjetas(datosFiltrados);
+            }, 220);
+        }
+
+        function filtrarCategoria(categoria, boton) {
+            categoriaActual = categoria;
+            document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('activo'));
+            boton.classList.add('activo');
+            actualizarVista();
+        }
+
+        // ============================================================
+        // Buscador en tiempo real
+        // ============================================================
+        const inputBuscador = document.getElementById('buscador');
+        const btnLimpiar = document.getElementById('btn-limpiar-buscador');
+        let debounceTimer = null;
+
+        inputBuscador.addEventListener('input', (e) => {
+            terminoBusqueda = e.target.value;
+            btnLimpiar.classList.toggle('visible', terminoBusqueda.length > 0);
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(actualizarVista, 180);
+        });
+
+        btnLimpiar.addEventListener('click', () => {
+            inputBuscador.value = '';
+            terminoBusqueda = '';
+            btnLimpiar.classList.remove('visible');
+            actualizarVista();
+            inputBuscador.focus();
+        });
+
+        // ============================================================
+        // Tema claro / oscuro
+        // ============================================================
         function cambiarTema() {
             const body = document.body;
             const temaActual = body.getAttribute('data-theme');
-            if(temaActual === 'light') {
+            if (temaActual === 'light') {
                 body.removeAttribute('data-theme');
+                localStorage.setItem('tema-portafolio', 'dark');
             } else {
                 body.setAttribute('data-theme', 'light');
+                localStorage.setItem('tema-portafolio', 'light');
             }
         }
 
-        // Inicializador de la aplicación
+        // ============================================================
+        // Inicialización
+        // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
+            const temaGuardado = localStorage.getItem('tema-portafolio');
+            if (temaGuardado === 'light') {
+                document.body.setAttribute('data-theme', 'light');
+            }
+            renderizarEstadisticas();
             renderizarTarjetas(asignaciones);
         });
     </script>
