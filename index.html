@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portafolio Digital | Base de Datos II</title>
+    <style>
+        /* Variables de entorno para cambios de tema fluidos */
+        :root {
+            --bg-principal: #0f172a;
+            --bg-tarjeta: #1e293b;
+            --texto-principal: #f8fafc;
+            --texto-secundario: #94a3b8;
+            --acentuar: #38bdf8;
+            --acentuar-hover: #7dd3fc;
+            --borde: #334155;
+            --transicion: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-principal: #f8fafc;
+            --bg-tarjeta: #ffffff;
+            --texto-principal: #0f172a;
+            --texto-secundario: #475569;
+            --acentuar: #0284c7;
+            --acentuar-hover: #0369a1;
+            --borde: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-principal);
+            color: var(--texto-principal);
+            transition: var(--transicion);
+            min-height: 100vh;
+            padding: 3rem 1rem;
+        }
+
+        .contenedor {
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+            position: relative;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+
+        h1 span {
+            color: var(--acentuar);
+        }
+
+        .subtitulo {
+            color: var(--texto-secundario);
+            font-size: 1.15rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        /* Controles de Temas y Filtros */
+        .controles {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            animation: fadeIn 1s ease;
+        }
+
+        .filtros {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-filtro {
+            background: var(--bg-tarjeta);
+            color: var(--texto-principal);
+            border: 1px solid var(--borde);
+            padding: 0.5rem 1.4rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transicion);
+        }
+
+        .btn-filtro.activo, .btn-filtro:hover {
+            background: var(--acentuar);
+            color: #0f172a;
+            border-color: var(--acentuar);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-tema {
+            background: none;
+            border: 1px solid var(--borde);
+            color: var(--texto-principal);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transicion);
+        }
+
+        .btn-tema:hover {
+            border-color: var(--acentuar);
+        }
+
+        /* Grid de Asignaciones */
+        .grid-asignaciones {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .tarjeta {
+            background: var(--bg-tarjeta);
+            border: 1px solid var(--borde);
+            border-radius: 14px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transicion);
+            animation: scaleUp 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Línea de acento lateral animada */
+        .tarjeta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--acentuar);
+            transform: scaleY(0);
+            transition: var(--transicion);
+            transform-origin: bottom;
+        }
+
+        .tarjeta:hover {
+            transform: translateY(-6px) scale(1.01);
+            border-color: var(--acentuar);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        .tarjeta:hover::before {
+            transform: scaleY(1);
+        }
+
+        .tag-materia {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--acentuar);
+            letter-spacing: 0.08em;
+            margin-bottom: 0.6rem;
+        }
+
+        .titulo-tarea {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .descripcion-tarea {
+            color: var(--texto-secundario);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.2rem;
+            flex-grow: 1;
+        }
+
+        /* Bloque de retroalimentación elegante */
+        .feedback-box {
+            margin-top: 0.5rem;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+            color: #f43f5e;
+            border-left: 2px solid #f43f5e;
+            padding-left: 10px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        [data-theme="light"] .feedback-box {
+            color: #dc2626;
+            border-left-color: #dc2626;
+        }
+
+        .enlace-descarga {
+            display: inline-flex;
+            align-items: center;
+            color: var(--acentuar);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transicion);
+            width: fit-content;
+            margin-top: auto;
+        }
+
+        .enlace-descarga:hover {
+            color: var(--acentuar-hover);
+            transform: translateX(5px);
+        }
+
+        .enlace-descarga span {
+            margin-left: 0.5rem;
+            transition: var(--transicion);
+        }
+
+        /* Animaciones del Sistema */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-25px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleUp {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 640px) {
+            .controles {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filtros {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor">
+        <header>
+            <h1>Portafolio <span>Académico</span></h1>
+            <p class="subtitulo">Facultad de Ingeniería de Sistemas Computacionales | Evidencias de Desempeño</p>
+        </header>
+
+        <div class="controles">
+            <div class="filtros" id="contenedor-filtros">
+                <button class="btn-filtro activo" onclick="filtrarMaterias('todos', this)">Todas las Entregas</button>
+                <button class="btn-filtro" onclick="filtrarMaterias('Base de Datos II', this)">Base de Datos II</button>
+            </div>
+            <button class="btn-tema" id="toggle-tema" onclick="cambiarTema()">🌓 Cambiar Tema</button>
+        </div>
+
+        <main class="grid-asignaciones" id="grid-proyectos">
+            </main>
+    </div>
+
+    <script>
+        // Repositorio local estructurado de tus entregas en Base de Datos II.
+        // Reemplaza los valores de "link_archivo" por los enlaces reales de tus documentos compartidos.
+        const asignaciones = [
+            {
+                "id": 1,
+                "materia": "Base de Datos II",
+                "asignacion": "Práctica N° 1 & N° 2: Normalización del Modelo Relacional",
+                "descripcion": "Diseño lógico, optimización y normalización de esquemas relacionales a través de dependencias funcionales. Aplicación rigurosa de formas normales (1FN, 2FN, 3FN) con el objetivo de mitigar redundancias y prevenir anomalías transaccionales.",
+                "retroalimentacion": "Falta la tabla que relaciona Id_venta y Id_producto.",
+                "link_archivo": "https://drive.google.com/"
+            },
+            {
+                "id": 2,
+                "materia": "Base de Datos II",
+                "asignacion": "Práctica #4 & #5: Creación de Dashboards Analíticos y de Auditoría",
+                "descripcion": "Construcción y despliegue de tableros visuales para el monitoreo interactivo de métricas transaccionales y de negocio. Integración de vistas detalladas y estructuración de trazas de auditoría para el control de accesos, mutaciones e integridad del sistema.",
+                "retroalimentacion": "",
+                "link_archivo": "https://drive.google.com/"
+            },
+            {
+                "id": 3,
+                "materia": "Base de Datos II",
+                "asignacion": "Integración Programática y Aplicativo Python: BD empresa_segura",
+                "descripcion": "Desarrollo e implementación de una capa de software utilizando Python para la interacción directa con la base de datos empresarial de forma controlada. Gestión nativa de operaciones CRUD, consultas parametrizadas seguras y manejo estructurado de transacciones.",
+                "retroalimentacion": "",
+                "link_archivo": "https://drive.google.com/"
+            },
+            {
+                "id": 4,
+                "materia": "Base de Datos II",
+                "asignacion": "Proyecto de Sistema de Información con MySQL y Programación",
+                "descripcion": "Ingeniería y despliegue integral de un sistema de información estructurado. Contempla el modelado físico relacional óptimo sobre el motor MySQL junto con su respectiva capa de lógica de negocio orientada a objetos.",
+                "retroalimentacion": "",
+                "link_archivo": "https://drive.google.com/"
+            },
+            {
+                "id": 5,
+                "materia": "Base de Datos II",
+                "asignacion": "Configuración de Clúster y Dashboards KPI con MongoDB Atlas & HTML",
+                "descripcion": "Despliegue y aprovisionamiento en la nube de infraestructuras NoSQL orientadas a documentos empleando MongoDB Atlas. Diseño e interfaz frontend orientada a la monitorización y visualización estática de Indicadores Clave de Rendimiento (KPI).",
+                "retroalimentacion": "No se ve interacción con los gráficos, no se ven los KPI, y su integración con los datos de mongo DB.",
+                "link_archivo": "https://drive.google.com/"
+            },
+            {
+                "id": 6,
+                "materia": "Base de Datos II",
+                "asignacion": "Talleres Avanzados NoSQL: Conectividad y Consultas en MongoDB",
+                "descripcion": "Construcción de lógicas de acceso y manipulación avanzada en bases de datos no relacionales. Incluye el uso intensivo del framework de agregación para consultas complejas y la documentación estructurada de scripts de bases de datos.",
+                "retroalimentacion": "Coloque las descripciones a la captura de pantalla, o sea qué está observando y qué evento se está ejecutando en el script.",
+                "link_archivo": "https://drive.google.com/"
+            },
+            {
+                "id": 7,
+                "materia": "Base de Datos II",
+                "asignacion": "Proyecto: SmartHome DB - IoT (En Desarrollo)",
+                "descripcion": "Modelado, almacenamiento dinámico e integración de arquitecturas de datos optimizadas para capturar y procesar de forma eficiente ráfagas continuas de telemetría provenientes de dispositivos inteligentes y entornos embebidos IoT.",
+                "retroalimentacion": "",
+                "link_archivo": "https://drive.google.com/"
+            }
+        ];
+
+        // Función encargada de renderizar las tarjetas interactivas
+        function renderizarTarjetas(datos) {
+            const grid = document.getElementById('grid-proyectos');
+            grid.innerHTML = '';
+            
+            datos.forEach(tarea => {
+                const tarjeta = document.createElement('div');
+                tarjeta.className = 'tarjeta';
+                
+                // Generar HTML de retroalimentación únicamente si existe contenido
+                const retroHTML = tarea.retroalimentacion 
+                    ? `<div class="feedback-box"><strong>Feedback del Docente:</strong> ${tarea.retroalimentacion}</div>` 
+                    : '';
+
+                tarjeta.innerHTML = `
+                    <div>
+                        <div class="tag-materia">${tarea.materia}</div>
+                        <h2 class="titulo-tarea">${tarea.asignacion}</h2>
+                        <p class="descripcion-tarea">${tarea.descripcion}</p>
+                        ${retroHTML}
+                    </div>
+                    <a href="${tarea.link_archivo}" target="_blank" class="enlace-descarga">
+                        Ver Documentación y Código <span>&rarr;</span>
+                    </a>
+                `;
+                grid.appendChild(tarjeta);
+            });
+        }
+
+        // Filtro dinámico en tiempo real
+        function filtrarMaterias(materia, boton) {
+            document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('activo'));
+            boton.classList.add('activo');
+
+            if(materia === 'todos') {
+                renderizarTarjetas(asignaciones);
+            } else {
+                const filtrados = asignaciones.filter(t => t.materia === materia);
+                renderizarTarjetas(filtrados);
+            }
+        }
+
+        // Manejador del Tema (Modo Claro vs Modo Oscuro)
+        function cambiarTema() {
+            const body = document.body;
+            const temaActual = body.getAttribute('data-theme');
+            if(temaActual === 'light') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'light');
+            }
+        }
+
+        // Inicializador de la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            renderizarTarjetas(asignaciones);
+        });
+    </script>
+</body>
+</html>
